@@ -22,3 +22,10 @@ func (bc *Blockchain) AddBlock(data string) {
 func NewBlockchain() *Blockchain {
 	return &Blockchain{[]*Block{NewGenesisBlock()}}
 }
+
+// NewBlockchain creates a new Blockchain with genesis Block
+func CreateBlockchain(address string) *Blockchain {
+	bc := Blockchain{}
+	bc.AddBlock("Genesis Block")
+	return &bc
+}
