@@ -7,44 +7,65 @@ import (
 	"time"
 )
 
-type Transaction struct {
-	Data []byte
-}
-
-// Block keeps block headers
 type Block struct {
-	Timestamp     int64
-	Transactions  []*Transaction 
-	PrevBlockHash []byte
-	Hash          []byte
+	Timestamp     int64          // Current timestamp (when the block is created)
+	Transactions  []*Transaction // Actual valuable information containing in the block
+	PrevBlockHash []byte         // Hash of the previous block
+	HashRoot	  []byte         // Hash of the merkle tree root
+	Hash          []byte         // Hash of this block
 }
 
-// SetHash calculates and sets block hash
+type Transaction struct {
+	Sender   		[]byte // Sender's address
+	Receiver 		[]byte // Receiver's address
+	Signature     	[]byte // Signature of the transaction
+}
+
 func (b *Block) SetHash() {
-	timestamp := []byte(strconv.FormatInt(b.Timestamp, 10))
+	str := strconv.FormatInt(b.Timestamp, 10)
+	timestampBytes := []byte(str)
+	data := HashTransaction(b.Transactions)
 
-	var data [][]byte
-
-	for _, transaction := range b.Transactions {
-		data = append(data, transaction.Data)
-	}
-	
-	headers := bytes.Join([][]byte{b.PrevBlockHash, bytes.Join(data, []byte{}), timestamp}, []byte{})
+	headers := bytes.Join([][]byte{timestampBytes, data, b.PrevBlockHash, b.HashRoot}, []byte{})
 	hash := sha256.Sum256(headers)
 
 	b.Hash = hash[:]
 }
 
-// NewBlock creates and returns Block
-func NewBlock(transaction []*Transaction, prevBlockHash []byte) *Block {
-	block := &Block{time.Now().Unix(), transaction, prevBlockHash, []byte{}}
+func HashTransaction(Transactions []*Transaction) []byte {
+	var concatenatedHash []byte
+	for _, tx := range Transactions {
+		hash := sha256.Sum256(bytes.Join(
+			[][]byte{
+				tx.Receiver, 
+				tx.Sender, 
+				tx.Signature,
+			},
+			[]byte{}),
+		) // Hash each transaction
+
+		// concatenatedHash = bytes.Join([][]byte{concatenatedHash, hash[:]}, []byte{})
+		concatenatedHash = append(concatenatedHash, hash[:]...) // Concatenate all transaction hashes
+	}
+
+	hash := sha256.Sum256(concatenatedHash) // Hash the concatenated hashes
+	return hash[:]
+}
+
+func NewBlock(Transactions []*Transaction, prevBlockHash, HashRoot []byte) *Block {
+	block := &Block{Timestamp: time.Now().Unix(), Transactions: Transactions, PrevBlockHash: prevBlockHash, HashRoot: HashRoot, Hash: []byte{}}
 	block.SetHash()
 	return block
 }
 
-// NewGenesisBlock creates and returns genesis Block
 func NewGenesisBlock() *Block {
-	// Create a coinbase transaction (you need to provide a valid coinbase transaction here)
-	coinbase := &Transaction{Data: []byte("Genesis Transaction")}
-	return NewBlock([]*Transaction{coinbase}, []byte{})
+	var twoDSlice [][]byte
+
+	//initialize the genesis block with a string, 
+	dataStr := []byte("Genesis Block")
+	twoDSlice = append(twoDSlice, dataStr)
+	transactions := []*Transaction{&Transaction{nil, nil, dataStr}}
+	
+	return NewBlock(transactions, []byte{}, NewMerkleTree(twoDSlice).NodeRoot.Data)
 }
+
