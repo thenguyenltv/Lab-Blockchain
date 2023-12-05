@@ -10,6 +10,7 @@ func Menu() {
 	var bc *Blockchain
 
 	for {
+		fmt.Println("-------------------------------------------------------")
 		fmt.Println("Choose option:")
 		fmt.Println("  1. Create new blockchain")
 		fmt.Println("  2. Add block to the blockchain")
@@ -56,11 +57,15 @@ func Menu() {
 					tnx.Signature = randomBytes
 					// add tnx to transactions
 					tnxs = append(tnxs, tnx)
-					fmt.Println("Do you want to add more transaction? (y/n)")
+					fmt.Print("Do you want to add more transaction? (y/n): ")
 					var choice string
 					fmt.Scan(&choice)
 					if choice == "n" || choice == "N" {
 						break
+					}else if choice == "y" || choice == "Y" {
+						continue
+					}else {
+						fmt.Println("Invalid choice. Please enter a valid option.")
 					}
 				}
 				bc.AddBlock(tnxs)
@@ -72,7 +77,7 @@ func Menu() {
 			} else {
 				bc.printChain()
 			}
-
+		
 		default:
 			fmt.Println("Invalid choice. Please enter a valid option.")
 		}
@@ -82,13 +87,3 @@ func Menu() {
 func main() {
 	Menu()
 }
-
-// func TestBlockChain(t *testing.T){
-// 	bc := NewBlockchain()
-// 	bc.AddBlock("Send 1 BTC to Ivan")
-// 	bc.AddBlock("Send 2 more BTC to Ivan")
-
-// 	for _, block := range bc.blocks {
-
-// 	}
-// }
